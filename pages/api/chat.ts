@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', profile.toLowerCase())
+      .ilike('name', profile)
       .single()
 
     if (profileError || !profileData) {
