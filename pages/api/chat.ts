@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     res.status(200).json({ reply: chat.choices[0].message.content })
-  } catch (err: any) {
+  } catch (err) {
     console.error(err)
     res.status(500).json({ reply: 'Hiba történt a válasz generálása közben.' })
   }
