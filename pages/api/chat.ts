@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { OpenAI } from 'openai'
 import { reflectaPrompts } from '@/lib/profiles'
@@ -15,9 +14,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const chat = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        ...(systemMessage ? [{ role: 'system', content: systemMessage }] : []),
-        { role: 'user', content: message },
-      ],
+        ...(systemMessage ? [{
+          role: 'system' as const,
+          content: systemMessage
+        }] : []),
+        {
+          role: 'user' as const,
+          content: message
+        }
+      ]
     })
 
     res.status(200).json({ reply: chat.choices[0].message.content })
