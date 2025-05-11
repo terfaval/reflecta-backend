@@ -27,14 +27,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const reply = chat.choices[0].message.content
 
-    // 💾 Supabase mentés
-    await supabase.from('journal_entries').insert([
+    // 💾 Supabase mentés naplózással
+    const { error } = await supabase.from('journal_entries').insert([
       {
         message,
         reply,
         profile
       }
     ])
+
+    if (error) {
+      console.error('❌ Supabase insert error:', error)
+    } else {
+      console.log('✅ Supabase insert OK')
+    }
 
     res.status(200).json({ reply })
   } catch (err) {
