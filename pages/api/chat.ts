@@ -12,46 +12,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { message, profile, session_id } = req.body
 
   try {
-    // 🔎 Lekérjük a profil promptját
+    // 🔎 Teljes profil betöltése
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('prompt_core')
-      .ilike('name', profile)
+      .select('*')
+      .eq('id', profile.toLowerCase())
       .single()
 
-    if (profileError || !profileData?.prompt_core) {
-      console.error('❌ Profil nem található vagy prompt_core hiányzik', profileError)
-      return res.status(400).json({ reply: 'Hiba: a kiválasztott profil nem elérhető.' })
+    if (profileError || !profileData) {
+      console.error('❌ Profil nem található:', profileError)
+      return res.status(400).json({ reply: 'A kiválasztott profil nem elérhető.' })
     }
 
     const systemMessage = profileData.prompt_core
 
-    // 🔹 Session ID létrehozás vagy használat
+    // 🔹 Új vagy meglévő session
     let sessionId = session_id
-
     if (!sessionId) {
       const { data: sessionRow, error: sessionError } = await supabase
         .from('sessions')
         .insert([{ profile_id: profile.toLowerCase() }])
         .select()
         .single()
-
       if (sessionError) throw sessionError
       sessionId = sessionRow.id
     }
 
-    // 🔹 Felhasználói üzenet mentése
-    const userMessageId = uuidv4()
+    // 🔹 User üzenet mentése
     await supabase.from('messages').insert([
       {
-        id: userMessageId,
+        id: uuidv4(),
         session_id: sessionId,
         role: 'user',
         content: message
       }
     ])
 
-    // 🔹 GPT válasz generálása
+    // 🔹 Válasz generálása
     const chat = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -62,18 +59,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const reply = chat.choices[0].message.content
 
-    // 🔹 Asszisztens válasz mentése
-    const assistantMessageId = uuidv4()
+    // 🔹 Assistant válasz mentése
     await supabase.from('messages').insert([
       {
-        id: assistantMessageId,
+        id: uuidv4(),
         session_id: sessionId,
         role: 'assistant',
         content: reply
       }
     ])
 
-    res.status(200).json({ reply, session_id: sessionId })
+    // 📤 Teljes profil objektumot is visszaadjuk, ha később kell frontendnek
+    res.status(200).json({ reply, session_id: sessionId, profile_meta: profileData })
+
   } catch (err) {
     console.error('❌ Hiba a chat.ts-ben:', err)
     res.status(500).json({ reply: 'Hiba történt a válasz generálása közben.' })
