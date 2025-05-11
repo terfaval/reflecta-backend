@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { OpenAI } from 'openai'
-import { reflectaPrompts } from '@/lib/profiles'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -11,22 +10,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).end()
 
   const { message, profile, session_id } = req.body
-  const systemMessage = profile && reflectaPrompts[profile]
 
   try {
-    let sessionId = session_id
+    // 🔎 Lekérjük a profil promptját
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('prompt_core')
+      .ilike('name', profile)
+      .single()
 
-    // 🔹 Ha nincs session_id, új session létrehozása
-    if (!sessionId) {
-      const { data, error } = await supabase.from('sessions').insert([
-        { profile_id: profile.toLowerCase() }
-      ]).select().single()
-
-      if (error) throw error
-      sessionId = data.id
+    if (profileError || !profileData?.prompt_core) {
+      console.error('❌ Profil nem található vagy prompt_core hiányzik', profileError)
+      return res.status(400).json({ reply: 'Hiba: a kiválasztott profil nem elérhető.' })
     }
 
-    // 🔹 Mentjük a kérdező üzenetét
+    const systemMessage = profileData.prompt_core
+
+    // 🔹 Session ID létrehozás vagy használat
+    let sessionId = session_id
+
+    if (!sessionId) {
+      const { data: sessionRow, error: sessionError } = await supabase
+        .from('sessions')
+        .insert([{ profile_id: profile.toLowerCase() }])
+        .select()
+        .single()
+
+      if (sessionError) throw sessionError
+      sessionId = sessionRow.id
+    }
+
+    // 🔹 Felhasználói üzenet mentése
     const userMessageId = uuidv4()
     await supabase.from('messages').insert([
       {
@@ -37,18 +51,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     ])
 
-    // 🔹 Generáljuk a választ
+    // 🔹 GPT válasz generálása
     const chat = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        ...(systemMessage ? [{ role: 'system' as const, content: systemMessage }] : []),
-        { role: 'user' as const, content: message }
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: message }
       ]
     })
 
     const reply = chat.choices[0].message.content
 
-    // 🔹 Mentjük a választ is
+    // 🔹 Asszisztens válasz mentése
     const assistantMessageId = uuidv4()
     await supabase.from('messages').insert([
       {
@@ -62,6 +76,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({ reply, session_id: sessionId })
   } catch (err) {
     console.error('❌ Hiba a chat.ts-ben:', err)
-    res.status(500).json({ reply: 'Hiba történt a válasz generálásakor.' })
+    res.status(500).json({ reply: 'Hiba történt a válasz generálása közben.' })
   }
 }
