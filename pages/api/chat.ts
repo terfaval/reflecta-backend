@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 🔹 Ha nincs session_id, új session létrehozása
     if (!sessionId) {
       const { data, error } = await supabase.from('sessions').insert([
-        { profile_id: profile }
+        { profile_id: profile.toLowerCase() }
       ]).select().single()
 
       if (error) throw error
