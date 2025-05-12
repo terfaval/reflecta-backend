@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // 🔍 Ellenőrzés: van-e user_preferences rekord
-    const { data: preferences, error: prefError } = await supabase
+    const { data: preferences } = await supabase
       .from('user_preferences')
       .select('*')
       .eq('user_id', user_id)
