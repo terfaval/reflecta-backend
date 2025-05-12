@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { buildPrompt } from '@/utils/promptBuilder'
 import { buildSystemPrompt } from '@/lib/profileEngine'
 import { OpenAI } from 'openai'
 import { createClient } from '@supabase/supabase-js'
