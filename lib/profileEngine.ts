@@ -1,23 +1,6 @@
-type Profile = {
-  name: string
-  archetype?: string
-  domain?: string
-  worldview?: string
-  tone_style?: Record<string, string>
-  question_logic?: string[]
-  ideal_usage?: string[]
-  not_suitable_for?: string
-  reactions_common?: string[]
-  reactions_typical?: string[]
-  reactions_rare?: string[]
-  closing_style?: string
-  closing_trigger?: string
-  closing_note?: string
-  [key: string]: any
-}
 
-export function buildSystemPrompt(profile: any): string {
-  const lines = []
+export function buildSystemPrompt(profile: Record<string, any>): string {
+  const lines: string[] = []
 
   lines.push(`Te ${profile.name} vagy.`)
   if (profile.archetype) lines.push(profile.archetype)
