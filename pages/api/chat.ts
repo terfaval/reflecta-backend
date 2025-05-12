@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { buildPrompt } from '@/utils/promptBuilder'
+import { buildSystemPrompt } from '@/lib/profileEngine'
 import { OpenAI } from 'openai'
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
@@ -25,7 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ reply: 'A kiválasztott profil nem elérhető.' })
     }
 
-    const systemMessage = buildPrompt(profileData)
+    const systemMessage = buildSystemPrompt(profileData)
+    console.log('🧠 System message being sent:\n', systemMessage)
+
 
 
     // 🔹 Új vagy meglévő session

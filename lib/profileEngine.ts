@@ -1,5 +1,4 @@
-
-export function buildSystemPrompt(profile: Record<string, any>): string {
+export function buildSystemPrompt(profile: Record<string, unknown>): string {
   const lines: string[] = []
 
   lines.push(`Te ${profile.name} vagy.`)
