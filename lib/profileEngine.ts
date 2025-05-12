@@ -1,57 +1,79 @@
-export function buildSystemPrompt(profile: any): string {
+export function buildSystemPrompt(profile: Record<string, unknown>): string {
   const lines: string[] = []
-  const p = profile as { [key: string]: any }
 
-  lines.push(`Te ${p.name} vagy.`)
-  if (p.archetype) lines.push(p.archetype)
-  if (p.domain) lines.push(`🔹 Területed: ${p.domain}`)
-  if (p.worldview) lines.push(`🔹 Világképed: ${p.worldview}`)
+  const get = (key: string): string | undefined => {
+    const val = profile[key]
+    return typeof val === 'string' ? val : undefined
+  }
 
-  if (p.tone_style && typeof p.tone_style === 'object') {
+  const getArray = (key: string): string[] => {
+    const val = profile[key]
+    return Array.isArray(val) ? val.filter(v => typeof v === 'string') : []
+  }
+
+  const getObject = (key: string): Record<string, string> => {
+    const val = profile[key]
+    return typeof val === 'object' && val !== null && !Array.isArray(val)
+      ? (val as Record<string, string>)
+      : {}
+  }
+
+  lines.push(`Te ${get('name') || 'Reflecta-profil'} vagy.`)
+  if (get('archetype')) lines.push(get('archetype')!)
+  if (get('domain')) lines.push(`🔹 Területed: ${get('domain')}`)
+  if (get('worldview')) lines.push(`🔹 Világképed: ${get('worldview')}`)
+
+  const tone = getObject('tone_style')
+  if (Object.keys(tone).length > 0) {
     lines.push(`\n🗣️ Hangnem és stílus:`)
-    lines.push(...Object.entries(p.tone_style).map(([k, v]) => `• ${k}: ${v}`))
+    lines.push(...Object.entries(tone).map(([k, v]) => `• ${k}: ${v}`))
   }
 
-  if (Array.isArray(p.question_logic) && p.question_logic.length) {
+  const questions = getArray('question_logic')
+  if (questions.length) {
     lines.push(`\n❓ Kérdéslogikád:`)
-    lines.push(...p.question_logic.map((q: string) => `• ${q}`))
+    lines.push(...questions.map(q => `• ${q}`))
   }
 
-  if (Array.isArray(p.ideal_usage) && p.ideal_usage.length) {
+  const ideal = getArray('ideal_usage')
+  if (ideal.length) {
     lines.push(`\n✅ Számodra ideális helyzetek:`)
-    lines.push(...p.ideal_usage.map((s: string) => `• ${s}`))
+    lines.push(...ideal.map(i => `• ${i}`))
   }
 
-  if (p.not_suitable_for) {
+  if (get('not_suitable_for')) {
     lines.push(`\n🚫 Nem alkalmas vagy ezekre:`)
-    lines.push(`• ${p.not_suitable_for}`)
+    lines.push(`• ${get('not_suitable_for')}`)
   }
 
-  if (Array.isArray(p.reactions_common) && p.reactions_common.length) {
+  const common = getArray('reactions_common')
+  if (common.length) {
     lines.push(`\n🤲 Általános reakcióid:`)
-    lines.push(...p.reactions_common.map((r: string) => `• ${r}`))
+    lines.push(...common.map(r => `• ${r}`))
   }
 
-  if (Array.isArray(p.reactions_rare) && p.reactions_rare.length) {
+  const rare = getArray('reactions_rare')
+  if (rare.length) {
     lines.push(`\n🌑 Ritka, különleges reakcióid:`)
-    lines.push(...p.reactions_rare.map((r: string) => `• ${r}`))
+    lines.push(...rare.map(r => `• ${r}`))
   }
 
-  if (Array.isArray(p.highlight_keywords) && p.highlight_keywords.length) {
+  const highlights = getArray('highlight_keywords')
+  if (highlights.length) {
     lines.push(`\n🧩 Kiemelt kulcskifejezések, amelyekre különösen érzékeny vagy:`)
-    lines.push(...p.highlight_keywords.map((k: string) => `• ${k}`))
+    lines.push(...highlights.map(k => `• ${k}`))
   }
 
-  if (p.recommendation_logic) {
+  if (get('recommendation_logic')) {
     lines.push(`\n📚 Ajánlási működésed:`)
-    lines.push(`• ${p.recommendation_logic}`)
+    lines.push(`• ${get('recommendation_logic')}`)
   }
 
-  if (p.closing_trigger || p.closing_style || p.closing_note) {
+  if (get('closing_trigger') || get('closing_style') || get('closing_note')) {
     lines.push(`\n🕊️ Lezárásodra jellemző:`)
-    if (p.closing_trigger) lines.push(`• Lezárás indoka: ${p.closing_trigger}`)
-    if (p.closing_style) lines.push(`• Stílus: ${p.closing_style}`)
-    if (p.closing_note) lines.push(`• Zárómondat: ${p.closing_note}`)
+    if (get('closing_trigger')) lines.push(`• Lezárás indoka: ${get('closing_trigger')}`)
+    if (get('closing_style')) lines.push(`• Stílus: ${get('closing_style')}`)
+    if (get('closing_note')) lines.push(`• Zárómondat: ${get('closing_note')}`)
   }
 
   lines.push(`\n🔸 A bevezető szakasz során a felhasználó válaszformájára, szimbolikus stíluspreferenciájára, irányítási igényére és motivációjára is figyelsz. Ezekre reflektálhatsz később.`)
