@@ -2,6 +2,7 @@
 import React from 'react'
 
 type Props = {
+  userId: string
   preferences: Record<string, string>
   onUpdate: (key: string, value: string) => void
 }
@@ -24,6 +25,20 @@ const preferenceOptions = {
 }
 
 const ReflectaPreferencesBar = ({ userId, preferences, onUpdate }: Props) => {
+  const handleClick = async (key: string, value: string) => {
+    onUpdate(key, value)
+
+    try {
+      await fetch('/api/preferences/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, key, value })
+      })
+    } catch (err) {
+      console.error('❌ Nem sikerült menteni a preferenciát:', err)
+    }
+  }
+
   return (
     <div className="reflecta-preference-icons">
       {Object.entries(preferenceOptions).map(([key, options]) => (
@@ -34,7 +49,7 @@ const ReflectaPreferencesBar = ({ userId, preferences, onUpdate }: Props) => {
               <button
                 key={opt.value}
                 className={`pref-icon ${active ? 'active' : ''}`}
-                onClick={() => onUpdate(key, opt.value)}
+                onClick={() => handleClick(key, opt.value)}
                 title={opt.title}
               >
                 {opt.label}

@@ -21,7 +21,7 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
   const [input, setInput] = useState('')
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string | null>(null)
-
+  const [profile] = useState(preselectedProfile || 'default')
   const [userId] = useState<string>('6ac6e5d0-7f73-42ff-a8fd-a23af43e790b')
   const [introMode, setIntroMode] = useState<boolean>(false)
   const [currentQuestion, setCurrentQuestion] = useState<IntroState | null>(null)
@@ -37,11 +37,9 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
   }
 
   const updatePreference = async (key: string, value: string) => {
-  setUserPreferences((prev) => ({ ...prev, [key]: value }))
-  // ne frissítsük vissza az adatbázisból azonnal
-  // await fetchPreferences()
-}
-
+    setUserPreferences((prev) => ({ ...prev, [key]: value }))
+    // nem frissítünk vissza azonnal
+  }
 
   const sendIntroAnswer = async (answer: string) => {
     if (!currentQuestion) return
@@ -116,8 +114,6 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
   }
 
   useEffect(() => {
-    if (!profile) return
-
     const init = async () => {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -142,7 +138,7 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
     }
 
     init()
-  }, [profile])
+  }, [])
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -157,44 +153,38 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
 
   return (
     <div className="reflecta-chat-container">
-      {!profile && <p>Nem választottál profilt.</p>}
+      <ReflectaPreferencesBar
+        userId={userId}
+        preferences={userPreferences}
+        onUpdate={updatePreference}
+      />
 
-      {profile && (
-        <>
-          <ReflectaPreferencesBar
-  preferences={userPreferences}
-  onUpdate={updatePreference}
-/>
-
-
-          <div className="reflecta-chat-history">
-            {chatHistory.map((msg, i) => (
-              <div key={i} className={`reflecta-chat-message ${msg.role}`}>
-                <p>{msg.content}</p>
-              </div>
-            ))}
-            <div ref={endOfChatRef} />
+      <div className="reflecta-chat-history">
+        {chatHistory.map((msg, i) => (
+          <div key={i} className={`reflecta-chat-message ${msg.role}`}>
+            <p>{msg.content}</p>
           </div>
+        ))}
+        <div ref={endOfChatRef} />
+      </div>
 
-          <div className="reflecta-chat-input">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              rows={1}
-              placeholder="Írd be a válaszod..."
-              className="reflecta-textarea"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim()}
-              className="reflecta-send-button"
-            >
-              Küldés
-            </button>
-          </div>
-        </>
-      )}
+      <div className="reflecta-chat-input">
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          rows={1}
+          placeholder="Írd be a válaszod..."
+          className="reflecta-textarea"
+        />
+        <button
+          onClick={handleSend}
+          disabled={!input.trim()}
+          className="reflecta-send-button"
+        >
+          Küldés
+        </button>
+      </div>
     </div>
   )
 }

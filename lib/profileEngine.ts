@@ -1,4 +1,7 @@
-export function buildSystemPrompt(profile: Record<string, any>, preferences?: Record<string, string>,
+
+export function buildSystemPrompt(
+  profile: Record<string, unknown>,
+  preferences?: Record<string, string>,
   fallback?: Record<string, string>
 ): string {
   const pref = preferences || fallback || {}
@@ -29,11 +32,13 @@ export function buildSystemPrompt(profile: Record<string, any>, preferences?: Re
     csend: 'A felhasználó csendes elmélyülést keres.',
     visszhang: 'A felhasználó olyan térre vágyik, ahol visszajelzést és tükröt kap.'
   }
-  const motivationHint = motivationMap[motivation] || (motivation ? `A felhasználó ezt emelte ki: "${motivation}".` : '')
+
+  const motivationHint = motivationMap[motivation]
+    || (motivation ? `A felhasználó ezt emelte ki: "${motivation}".` : '')
 
   const boundaryHint = boundary ? `Kerüld a következő érzékeny témát: "${boundary}".` : ''
 
-  const readable = {
+  const readable: Record<string, string> = {
     szimbolikus: 'Használj képeket, szimbólumokat, metaforákat.',
     réteges: 'Törekedj rétegezett, érzékletes fogalmazásra.',
     egyszerű: 'Törekedj egyszerű, világos megfogalmazásra.',
