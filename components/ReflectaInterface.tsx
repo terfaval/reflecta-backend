@@ -20,7 +20,6 @@ type IntroState = {
 export default function ReflectaInterface({ preselectedProfile }: Props) {
   const [input, setInput] = useState('')
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
-  const [profile, setProfile] = useState<string | null>(preselectedProfile || null)
   const [sessionId, setSessionId] = useState<string | null>(null)
 
   const [userId] = useState<string>('6ac6e5d0-7f73-42ff-a8fd-a23af43e790b')
@@ -156,9 +155,6 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
     endOfChatRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatHistory])
 
-  const hasPreferences = ['reply_length', 'symbolic_style', 'guidance_preference']
-    .some(k => userPreferences[k])
-
   return (
     <div className="reflecta-chat-container">
       {!profile && <p>Nem választottál profilt.</p>}
@@ -166,7 +162,6 @@ export default function ReflectaInterface({ preselectedProfile }: Props) {
       {profile && (
         <>
           <ReflectaPreferencesBar
-  userId={userId}
   preferences={userPreferences}
   onUpdate={updatePreference}
 />

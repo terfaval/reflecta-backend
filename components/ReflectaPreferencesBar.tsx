@@ -2,7 +2,6 @@
 import React from 'react'
 
 type Props = {
-  userId: string
   preferences: Record<string, string>
   onUpdate: (key: string, value: string) => void
 }

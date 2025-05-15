@@ -1,6 +1,4 @@
-export function buildSystemPrompt(
-  profile: any,
-  preferences?: Record<string, string>,
+export function buildSystemPrompt(profile: Record<string, any>, preferences?: Record<string, string>,
   fallback?: Record<string, string>
 ): string {
   const pref = preferences || fallback || {}
