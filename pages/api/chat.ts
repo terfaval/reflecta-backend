@@ -190,7 +190,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .order('started_at', { ascending: false })
           .limit(1)
           .single()
-        sessionId = lastSession.id
+        if (!lastSession) {
+  throw new Error('Nem található aktív session.')
+}
+sessionId = lastSession.id
+
       }
     }
 
